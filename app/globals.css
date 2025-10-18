@@ -2,13 +2,13 @@
 @tailwind components;
 @tailwind utilities;
 
-:root { --sentient-pink: #F36F8E; }
+:root { --sentient-pink: #f36f8e; }
 body { background: var(--sentient-pink); color: #fff; }
 
 .masked{
   -webkit-mask-image: url('/mask/sentient-mask.png');
   mask-image: url('/mask/sentient-mask.png');
   -webkit-mask-repeat:no-repeat; mask-repeat:no-repeat;
-  -webkit-mask-size:contain;     mask-size:contain;
-  -webkit-mask-position:center;  mask-position:center;
+  -webkit-mask-size:contain;    mask-size:contain;
+  -webkit-mask-position:center; mask-position:center;
 }
