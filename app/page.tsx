@@ -1,3 +1,4 @@
+// app/page.tsx
 'use client';
 
 import { useEffect } from 'react';
@@ -7,7 +8,9 @@ import UsernameNoteList from '@/components/UsernameNoteList';
 import { ensureAnonAuth } from '@/lib/firebase';
 
 export default function Page() {
-  useEffect(() => { ensureAnonAuth(); }, []);
+  useEffect(() => {
+    ensureAnonAuth();
+  }, []);
 
   return (
     <main className="px-4 py-8">
