@@ -2,13 +2,49 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Theme */
 :root { --sentient-pink: #f36f8e; }
 body { background: var(--sentient-pink); color: #fff; }
 
+/* Masked logo grid (yerinde kalsın) */
 .masked{
   -webkit-mask-image: url('/mask/sentient-mask.png');
   mask-image: url('/mask/sentient-mask.png');
-  -webkit-mask-repeat:no-repeat; mask-repeat:no-repeat;
-  -webkit-mask-size:contain;    mask-size:contain;
-  -webkit-mask-position:center; mask-position:center;
+  -webkit-mask-repeat: no-repeat;
+  mask-repeat: no-repeat;
+  -webkit-mask-size: contain;
+  mask-size: contain;
+  -webkit-mask-position: center;
+  mask-position: center;
 }
+
+/* --------- Infinite vertical scroll for notes --------- */
+@keyframes vert-scroll {
+  0%   { transform: translateY(0); }
+  100% { transform: translateY(-50%); } /* içerik 2x render edildiği için -50% */
+}
+
+/* Basit sınıf: komponentte `className="animate-vert-scroll"` dersen çalışır */
+.animate-vert-scroll {
+  animation: vert-scroll linear infinite;
+}
+
+/* Tailwind'in motion-safe varyantını manuel destekle (colon kaçışlı) */
+.motion-safe\:animate-vert-scroll {
+  animation: vert-scroll linear infinite;
+}
+
+/* Hover’da durdurmak için: ebeveyne `pause-on-hover` ver */
+.pause-on-hover:hover .animate-vert-scroll,
+.pause-on-hover:hover .motion-safe\:animate-vert-scroll {
+  animation-play-state: paused;
+}
+
+/* Kullanıcının reduced-motion tercihini saygıla */
+@media (prefers-reduced-motion: reduce) {
+  .animate-vert-scroll,
+  .motion-safe\:animate-vert-scroll {
+    animation: none;
+  }
+}
+
