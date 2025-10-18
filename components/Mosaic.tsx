@@ -10,8 +10,8 @@ const GRID_COLS = 64;
 const GRID_ROWS = 16;
 
 type Props = {
-  selected?: string;                   // opsiyonel: seçili hücreyi vurgulamak istersen
-  onSelect?: (id: string) => void;     // hücreye tıklanınca çağrılır
+  selected?: string;                 // seçili hücreyi vurgulamak için (opsiyonel)
+  onSelect?: (id: string) => void;   // hücreye tıklanınca çağrılır
 };
 
 export default function Mosaic({ selected, onSelect }: Props) {
@@ -34,10 +34,7 @@ export default function Mosaic({ selected, onSelect }: Props) {
   const height = GRID_ROWS * CELL;
 
   return (
-    {/* YALNIZCA YATAY ortalama */}
     <section className="mt-8 w-full flex justify-center">
-      {/* Hem yatay hem dikey ortalamak istersen:
-          <section className="mt-8 w-full min-h-[50vh] flex items-center justify-center"> */}
       <div className="masked" style={{ width, height }}>
         <div
           className="grid"
@@ -70,6 +67,7 @@ export default function Mosaic({ selected, onSelect }: Props) {
                     alt=""
                     className="absolute inset-0 h-full w-full object-cover"
                     draggable={false}
+                    loading="lazy"
                   />
                 )}
               </button>
