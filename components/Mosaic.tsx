@@ -10,10 +10,8 @@ const GRID_COLS = 64;
 const GRID_ROWS = 16;
 
 type Props = {
-  /** Opsiyonel: seçili hücreyi vurgulamak için */
-  selected?: string;
-  /** Hücreye tıklanınca çağrılır */
-  onSelect?: (id: string) => void;
+  selected?: string;                   // opsiyonel: seçili hücreyi vurgulamak istersen
+  onSelect?: (id: string) => void;     // hücreye tıklanınca çağrılır
 };
 
 export default function Mosaic({ selected, onSelect }: Props) {
@@ -36,8 +34,11 @@ export default function Mosaic({ selected, onSelect }: Props) {
   const height = GRID_ROWS * CELL;
 
   return (
-    <section className="mx-auto mt-8 max-w-6xl">
-      <div className="mx-auto masked" style={{ width, height }}>
+    {/* YALNIZCA YATAY ortalama */}
+    <section className="mt-8 w-full flex justify-center">
+      {/* Hem yatay hem dikey ortalamak istersen:
+          <section className="mt-8 w-full min-h-[50vh] flex items-center justify-center"> */}
+      <div className="masked" style={{ width, height }}>
         <div
           className="grid"
           style={{
@@ -57,16 +58,10 @@ export default function Mosaic({ selected, onSelect }: Props) {
               <button
                 key={id}
                 title={id}
-                aria-label={`Hücre ${id}`}
                 onClick={() => onSelect?.(id)}
-                // Çizgileri belirginleştirdik: /10 -> /40 (md: /50)
-                className={[
-                  'relative overflow-hidden',
-                  'border border-white/40 md:border-white/50',
-                  'focus:outline-none focus:ring-1 focus:ring-white/60',
-                  'hover:bg-white/[0.03]',
-                  selected === id ? 'ring-1 ring-white/60' : '',
-                ].join(' ')}
+                className={`border border-white/10 relative overflow-hidden ${
+                  selected === id ? 'ring-1 ring-white/40' : ''
+                }`}
                 style={{ width: CELL, height: CELL }}
               >
                 {url && (
@@ -75,7 +70,6 @@ export default function Mosaic({ selected, onSelect }: Props) {
                     alt=""
                     className="absolute inset-0 h-full w-full object-cover"
                     draggable={false}
-                    loading="lazy"
                   />
                 )}
               </button>
