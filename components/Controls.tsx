@@ -1,9 +1,19 @@
 'use client';
 
-import { useState, useRef, useEffect } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { db, storage, ensureAnonAuth, auth } from '@/lib/firebase';
-import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
-import { doc, setDoc, addDoc, collection, serverTimestamp } from 'firebase/firestore';
+import {
+  ref,
+  uploadBytes,
+  getDownloadURL,
+} from 'firebase/storage';
+import {
+  doc,
+  setDoc,
+  addDoc,
+  collection,
+  serverTimestamp,
+} from 'firebase/firestore';
 import type { CellId } from '@/lib/types';
 
 type Props = {
@@ -18,25 +28,41 @@ export default function Controls({ cell, setCell }: Props) {
   const [busy, setBusy] = useState(false);
   const [msg, setMsg] = useState<string | null>(null);
 
+  const fileRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    // clear success message after a while
+    if (!msg) return;
+    const t = setTimeout(() => setMsg(null), 3000);
+    return () => clearTimeout(t);
+  }, [msg]);
+
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setMsg(null);
 
-    if (!file) { setMsg('Önce fotoğraf seç.'); return; }
-    if (!username || !note) { setMsg('Kullanıcı adı ve not gerekli.'); return; }
+    if (!file) {
+      setMsg('Choose a photo first.');
+      return;
+    }
+    if (!username || !note) {
+      setMsg('Username and message are required.');
+      return;
+    }
 
     setBusy(true);
     try {
       await ensureAnonAuth();
-      const uid = auth.currentUser!.uid;
+      const user = auth.currentUser!;
+      const uid = user.uid;
 
-      // 1) Storage’a yükle
+      // 1) upload to Storage
       const path = `avatars/${uid}/${Date.now()}.jpg`;
       const rf = ref(storage, path);
       await uploadBytes(rf, file);
       const url = await getDownloadURL(rf);
 
-      // 2) Hücreyi doldur
+      // 2) fill cell (firestore)
       await setDoc(doc(db, 'cells', cell), {
         id: cell,
         url,
@@ -44,73 +70,89 @@ export default function Controls({ cell, setCell }: Props) {
         createdAt: serverTimestamp(),
       });
 
-      // 3) Notu kaydet
+      // 3) save note (firestore)
       await addDoc(collection(db, 'notes'), {
         username,
         text: note,
         uid,
-        cell,
         createdAt: serverTimestamp(),
       });
 
-      setMsg('✔ Yüklendi!');
+      setMsg('Uploaded!');
       setNote('');
+      if (fileRef.current) fileRef.current.value = '';
       setFile(null);
-    } catch (err: any) {
+    } catch (err) {
       console.error(err);
-      setMsg('Yükleme sırasında sorun oluştu.');
+      setMsg('Something went wrong.');
     } finally {
       setBusy(false);
     }
   }
 
   return (
-    <section className="mx-auto max-w-6xl grid grid-cols-1 md:grid-cols-3 gap-6">
-      {/* Hücre seç */}
-      <div className="rounded-xl bg-white/5 p-6 ring-1 ring-white/10">
-        <label className="block text-sm font-semibold opacity-90">Hücre seç</label>
+    <form
+      onSubmit={handleSubmit}
+      className="grid gap-6 md:grid-cols-3"
+    >
+      {/* Pick cell */}
+      <div className="rounded-2xl bg-white/10 p-6 shadow-sm backdrop-blur-sm">
+        <h3 className="mb-3 text-lg font-semibold text-white">Pick a cell</h3>
         <input
+          type="text"
           value={cell}
           onChange={(e) => setCell(e.target.value as CellId)}
-          className="mt-2 w-full rounded-md bg-white/10 px-3 py-2 outline-none ring-1 ring-white/10 focus:ring-white/20"
-          placeholder="5-12"
+          className="w-full rounded-lg bg-white/10 px-3 py-2 text-white placeholder-white/60 outline-none ring-1 ring-white/20 focus:ring-white/40"
+          placeholder="row-col (e.g. 5-12)"
         />
       </div>
 
-      {/* Foto yükle */}
-      <div className="rounded-xl bg-white/5 p-6 ring-1 ring-white/10">
-        <label className="block text-sm font-semibold opacity-90">Fotoğraf yükle</label>
+      {/* Upload image */}
+      <div className="rounded-2xl bg-white/10 p-6 shadow-sm backdrop-blur-sm">
+        <h3 className="mb-3 text-lg font-semibold text-white">Upload image</h3>
         <input
+          ref={fileRef}
           type="file"
-          className="mt-2"
           accept="image/*"
           onChange={(e) => setFile(e.target.files?.[0] ?? null)}
+          className="block w-full text-white file:mr-4 file:rounded-md file:border-0 file:bg-white/20 file:px-4 file:py-2 file:text-white file:backdrop-blur placeholder-white/60"
         />
       </div>
 
-      {/* Not bırak */}
-      <form onSubmit={handleSubmit} className="rounded-xl bg-white/5 p-6 ring-1 ring-white/10">
-        <label className="block text-sm font-semibold opacity-90">Not bırak</label>
+      {/* Leave a note */}
+      <div className="rounded-2xl bg-white/10 p-6 shadow-sm backdrop-blur-sm">
+        <h3 className="mb-3 text-lg font-semibold text-white">Leave a note</h3>
+
         <input
+          type="text"
           value={username}
           onChange={(e) => setUsername(e.target.value)}
-          className="mt-2 w-full rounded-md bg-white/10 px-3 py-2 outline-none ring-1 ring-white/10 focus:ring-white/20"
-          placeholder="@kullanici"
+          className="mb-3 w-full rounded-lg bg-white/10 px-3 py-2 text-white placeholder-white/60 outline-none ring-1 ring-white/20 focus:ring-white/40"
+          placeholder="@username"
         />
+
         <input
+          type="text"
           value={note}
           onChange={(e) => setNote(e.target.value)}
-          className="mt-2 w-full rounded-md bg-white/10 px-3 py-2 outline-none ring-1 ring-white/10 focus:ring-white/20"
-          placeholder="Mesajın..."
+          className="mb-4 w-full rounded-lg bg-white/10 px-3 py-2 text-white placeholder-white/60 outline-none ring-1 ring-white/20 focus:ring-white/40"
+          placeholder="Message…"
         />
+
         <button
+          type="submit"
           disabled={busy}
-          className="mt-3 w-full rounded-md bg-white/20 py-2 font-semibold hover:bg-white/25 disabled:opacity-50"
+          className="w-full rounded-lg bg-white/20 px-4 py-2 font-semibold text-white hover:bg-white/30 disabled:opacity-60"
         >
-          Kaydet
+          {busy ? 'Saving…' : 'Save'}
         </button>
-        {msg && <div className="mt-2 text-sm opacity-90">{msg}</div>}
-      </form>
-    </section>
+
+        {msg && (
+          <p className="mt-3 text-sm text-white/90">
+            {msg === 'Uploaded!' ? '✓ ' : ''}{msg}
+          </p>
+        )}
+      </div>
+    </form>
   );
 }
