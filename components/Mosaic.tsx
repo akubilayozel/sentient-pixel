@@ -5,33 +5,28 @@ import { collection, onSnapshot } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import type { CellDoc } from '@/lib/types';
 
-// Hücre boyutu (px)
-const CELL = 26;
-// Maskenin kapladığı ızgara ölçüleri
+const CELL = 26;          // px
 const GRID_COLS = 64;
 const GRID_ROWS = 16;
 
-export default function Mosaic() {
-  // cells: "row-col" -> image url
-  const [cells, setCells] = useState<Record<string, string>>({});
+type Props = {
+  selected?: string;                   // opsiyonel: seçili hücreyi vurgulamak istersen
+  onSelect?: (id: string) => void;     // hücreye tıklanınca çağrılır
+};
+
+export default function Mosaic({ selected, onSelect }: Props) {
+  const [cells, setCells] = useState<Record<string, string>>({}); // id -> url
 
   useEffect(() => {
     const unsub = onSnapshot(collection(db, 'cells'), (snap) => {
       const map: Record<string, string> = {};
       snap.forEach((d) => {
         const v = d.data() as CellDoc;
-
-        // Güvenli anahtar: önce v.id (verideki id), yoksa doc.id
         const key = v?.id && typeof v.id === 'string' ? v.id : d.id;
-
-        if (key && v?.url) {
-          map[key] = v.url;
-        }
+        if (key && v?.url) map[key] = v.url;
       });
-
       setCells(map);
     });
-
     return () => unsub();
   }, []);
 
@@ -40,8 +35,10 @@ export default function Mosaic() {
 
   return (
     <section className="mx-auto mt-8 max-w-6xl">
-      {/* Mask uygulanacak dış kapsayıcı */}
-      <div className="mx-auto masked" style={{ width, height }}>
+      <div
+        className="mx-auto masked"
+        style={{ width, height }}
+      >
         <div
           className="grid"
           style={{
@@ -58,17 +55,22 @@ export default function Mosaic() {
             const url = cells[id];
 
             return (
-              <div
+              <button
                 key={id}
-                className="border border-white/10"
-                style={{
-                  width: CELL,
-                  height: CELL,
-                  backgroundImage: url ? `url("${url}")` : undefined,
-                  backgroundSize: 'cover',
-                  backgroundPosition: 'center',
-                }}
-              />
+                title={id}
+                onClick={() => onSelect?.(id)}
+                className={`border border-white/10 relative overflow-hidden ${selected === id ? 'ring-1 ring-white/40' : ''}`}
+                style={{ width: CELL, height: CELL }}
+              >
+                {url && (
+                  <img
+                    src={url}
+                    alt=""
+                    className="absolute inset-0 h-full w-full object-cover"
+                    draggable={false}
+                  />
+                )}
+              </button>
             );
           })}
         </div>
@@ -76,4 +78,3 @@ export default function Mosaic() {
     </section>
   );
 }
-
