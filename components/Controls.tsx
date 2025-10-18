@@ -1,13 +1,17 @@
 'use client';
 
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { db, storage, ensureAnonAuth, auth } from '@/lib/firebase';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { doc, setDoc, addDoc, collection, serverTimestamp } from 'firebase/firestore';
 import type { CellId } from '@/lib/types';
 
-export default function Controls() {
-  const [cell, setCell] = useState<CellId>('0-0');
+type Props = {
+  cell: CellId;
+  setCell: (id: CellId) => void;
+};
+
+export default function Controls({ cell, setCell }: Props) {
   const [file, setFile] = useState<File | null>(null);
   const [username, setUsername] = useState('');
   const [note, setNote] = useState('');
@@ -26,7 +30,7 @@ export default function Controls() {
       await ensureAnonAuth();
       const uid = auth.currentUser!.uid;
 
-      // 1) Fotoğrafı Storage'a yükle
+      // 1) Storage’a yükle
       const path = `avatars/${uid}/${Date.now()}.jpg`;
       const rf = ref(storage, path);
       await uploadBytes(rf, file);
@@ -45,59 +49,68 @@ export default function Controls() {
         username,
         text: note,
         uid,
+        cell,
         createdAt: serverTimestamp(),
       });
 
-      setMsg('✅ Yüklendi!');
-      setFile(null);
+      setMsg('✔ Yüklendi!');
       setNote('');
+      setFile(null);
     } catch (err: any) {
       console.error(err);
-      setMsg('❌ Hata: ' + (err?.message || 'bilinmiyor'));
+      setMsg('Yükleme sırasında sorun oluştu.');
     } finally {
       setBusy(false);
     }
   }
 
   return (
-    <form onSubmit={handleSubmit} className="mx-auto max-w-5xl grid grid-cols-1 md:grid-cols-3 gap-4">
+    <section className="mx-auto max-w-6xl grid grid-cols-1 md:grid-cols-3 gap-6">
       {/* Hücre seç */}
-      <div className="rounded-2xl border border-white/50 px-5 py-4">
-        <label className="block text-lg font-semibold">Hücre seç</label>
+      <div className="rounded-xl bg-white/5 p-6 ring-1 ring-white/10">
+        <label className="block text-sm font-semibold opacity-90">Hücre seç</label>
         <input
           value={cell}
-          onChange={(e)=>setCell(e.target.value)}
-          placeholder="ör. 5-12"
-          className="mt-2 w-full rounded-lg px-3 py-2 text-black"
+          onChange={(e) => setCell(e.target.value as CellId)}
+          className="mt-2 w-full rounded-md bg-white/10 px-3 py-2 outline-none ring-1 ring-white/10 focus:ring-white/20"
+          placeholder="5-12"
         />
       </div>
 
-      {/* Fotoğraf yükle */}
-      <div className="rounded-2xl border border-white/50 px-5 py-4">
-        <label className="block text-lg font-semibold">Fotoğraf yükle</label>
-        <input type="file" accept="image/*" onChange={(e)=>setFile(e.target.files?.[0] ?? null)} className="mt-2 w-full text-sm" />
+      {/* Foto yükle */}
+      <div className="rounded-xl bg-white/5 p-6 ring-1 ring-white/10">
+        <label className="block text-sm font-semibold opacity-90">Fotoğraf yükle</label>
+        <input
+          type="file"
+          className="mt-2"
+          accept="image/*"
+          onChange={(e) => setFile(e.target.files?.[0] ?? null)}
+        />
       </div>
 
       {/* Not bırak */}
-      <div className="rounded-2xl border border-white/50 px-5 py-4">
-        <label className="block text-lg font-semibold">Not bırak</label>
+      <form onSubmit={handleSubmit} className="rounded-xl bg-white/5 p-6 ring-1 ring-white/10">
+        <label className="block text-sm font-semibold opacity-90">Not bırak</label>
         <input
           value={username}
-          onChange={(e)=>setUsername(e.target.value)}
+          onChange={(e) => setUsername(e.target.value)}
+          className="mt-2 w-full rounded-md bg-white/10 px-3 py-2 outline-none ring-1 ring-white/10 focus:ring-white/20"
           placeholder="@kullanici"
-          className="mt-2 w-full rounded-lg px-3 py-2 text-black"
         />
         <input
           value={note}
-          onChange={(e)=>setNote(e.target.value)}
-          placeholder="Mesajın…"
-          className="mt-2 w-full rounded-lg px-3 py-2 text-black"
+          onChange={(e) => setNote(e.target.value)}
+          className="mt-2 w-full rounded-md bg-white/10 px-3 py-2 outline-none ring-1 ring-white/10 focus:ring-white/20"
+          placeholder="Mesajın..."
         />
-        <button disabled={busy} className="mt-3 w-full rounded-xl bg-white/15 hover:bg-white/25 transition px-4 py-2 font-semibold">
-          {busy ? 'Yükleniyor…' : 'Kaydet'}
+        <button
+          disabled={busy}
+          className="mt-3 w-full rounded-md bg-white/20 py-2 font-semibold hover:bg-white/25 disabled:opacity-50"
+        >
+          Kaydet
         </button>
-        {msg && <p className="mt-2 text-sm opacity-90">{msg}</p>}
-      </div>
-    </form>
+        {msg && <div className="mt-2 text-sm opacity-90">{msg}</div>}
+      </form>
+    </section>
   );
 }
