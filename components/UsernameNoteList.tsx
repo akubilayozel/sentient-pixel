@@ -5,6 +5,11 @@ import { collection, onSnapshot, orderBy, query, limit } from 'firebase/firestor
 import { db } from '@/lib/firebase';
 import type { NoteDoc } from '@/lib/types';
 
+/**
+ * Sonsuz dikey kaydırmalı not listesi
+ * - Notları çeker, iki kez peş peşe render eder (loop etkisi)
+ * - Hover’da durur, motion-reduce’ta animasyon kapanır (globals.css)
+ */
 export default function UsernameNoteList() {
   const [notes, setNotes] = useState<(NoteDoc & { id: string })[]>([]);
 
@@ -12,7 +17,7 @@ export default function UsernameNoteList() {
     const q = query(
       collection(db, 'notes'),
       orderBy('createdAt', 'desc'),
-      limit(200)
+      limit(200) // güvenli üst sınır, performans için
     );
 
     const unsub = onSnapshot(q, (snap) => {
@@ -35,7 +40,9 @@ export default function UsernameNoteList() {
       <div
         className={[
           'h-[320px] md:h-[420px] overflow-hidden relative',
+          // Üst-alt yumuşak maske (fade)
           '[mask-image:linear-gradient(to_bottom,transparent,black_10%,black_90%,transparent)]',
+          // Hover’da durdurmayı sağlayan wrapper (globals.css’te .pause-on-hover:hover .animate-vert-scroll …)
           'pause-on-hover',
         ].join(' ')}
       >
@@ -43,7 +50,7 @@ export default function UsernameNoteList() {
           <div className="opacity-70 text-sm py-4">No notes yet…</div>
         ) : (
           <ul
-            className="will-change-transform motion-safe:animate-vert-scroll motion-reduce:animate-none"
+            className="animate-vert-scroll will-change-transform"
             style={{ animationDuration: `${durationSec}s` }}
           >
             {looped.map((n, i) => (
