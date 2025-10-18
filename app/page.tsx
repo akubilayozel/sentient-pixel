@@ -1,3 +1,4 @@
+// app/page.tsx
 'use client';
 
 import { useEffect, useState } from 'react';
@@ -18,6 +19,14 @@ export default function Page() {
     <main className="px-4 py-8">
       <Controls cell={cell} setCell={setCell} />
       <Mosaic selected={cell} onSelect={setCell} />
+
+      {/* Notes section title */}
+      <div className="mx-auto mt-10 max-w-6xl">
+        <h2 className="mb-3 text-lg font-bold tracking-wide md:text-xl">
+          Community Notes
+        </h2>
+      </div>
+
       <UsernameNoteList />
     </main>
   );
