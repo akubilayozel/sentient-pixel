@@ -10,12 +10,14 @@ const GRID_COLS = 64;
 const GRID_ROWS = 16;
 
 type Props = {
-  selected?: string;                 // seçili hücreyi vurgulamak için (opsiyonel)
-  onSelect?: (id: string) => void;   // hücreye tıklanınca çağrılır
+  /** (Optional) highlight a selected cell */
+  selected?: string;
+  /** Called when a cell is clicked */
+  onSelect?: (id: string) => void;
 };
 
 export default function Mosaic({ selected, onSelect }: Props) {
-  const [cells, setCells] = useState<Record<string, string>>({}); // id -> url
+  const [cells, setCells] = useState<Record<string, string>>({}); // id -> image url
 
   useEffect(() => {
     const unsub = onSnapshot(collection(db, 'cells'), (snap) => {
@@ -34,6 +36,7 @@ export default function Mosaic({ selected, onSelect }: Props) {
   const height = GRID_ROWS * CELL;
 
   return (
+    // center horizontally (and keep a little top margin)
     <section className="mt-8 w-full flex justify-center">
       <div className="masked" style={{ width, height }}>
         <div
@@ -55,10 +58,16 @@ export default function Mosaic({ selected, onSelect }: Props) {
               <button
                 key={id}
                 title={id}
+                aria-label={`cell ${id}`}
                 onClick={() => onSelect?.(id)}
-                className={`border border-white/10 relative overflow-hidden ${
-                  selected === id ? 'ring-1 ring-white/40' : ''
-                }`}
+                className={[
+                  'relative overflow-hidden',
+                  // more visible grid lines:
+                  'border border-white/40 md:border-white/50',
+                  'hover:bg-white/[0.03]',
+                  'focus:outline-none focus:ring-1 focus:ring-white/60',
+                  selected === id ? 'ring-1 ring-white/60' : '',
+                ].join(' ')}
                 style={{ width: CELL, height: CELL }}
               >
                 {url && (
