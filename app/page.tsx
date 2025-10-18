@@ -16,7 +16,8 @@ export default function Page() {
   }, []);
 
   return (
-    <main className="px-4 py-8">
+    // Üstteki boşluğu azaltmak için pt-0 / md:pt-2 kullanıldı.
+    <main className="px-4 pt-0 md:pt-2 pb-8">
       <Controls cell={cell} setCell={setCell} />
       <Mosaic selected={cell} onSelect={setCell} />
 
